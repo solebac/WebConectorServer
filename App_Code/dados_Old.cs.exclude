@@ -1,0 +1,123 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+//###################Implementação Lib's
+using MySql.Data.MySqlClient;
+using System.Data;
+using System.IO;
+using System.Runtime.InteropServices;
+//###################End Lib's
+
+/// <summary>
+/// Summary description for dados
+/// </summary>
+public class dados
+{
+	public dados()
+	{
+        conexao = new MySqlConnection("server=" + "127.0.0.1" + ";user id=" + "master" + ";password=" + "c3r3br0" + ";database=" + "conector");
+	}
+    public dados(string userName, string localHosts, string senha, string schema)
+    {
+        try
+        {
+            usuario = userName;
+            ip = localHosts;
+            passwd = senha;
+            baseDados = schema;
+            conexao = new MySqlConnection("server=" + ip + ";user id=" + usuario + ";password=" + passwd + ";database=" + baseDados);
+
+        }
+        catch (Exception e)
+        {
+            throw new Exception("ERRO BANCO DE DADOS: " + e.Message.ToString());
+        }
+    }
+    //####################################################Variaveis Encapsudas###########################################################
+    protected string usuario;
+    protected string ip;
+    protected string passwd;
+    protected string baseDados; private MySqlConnection conexao;
+    private MySqlDataReader drResultado;
+    private DataSet dsResultado;
+    private MySqlParameter parametro;
+    private MySqlCommand comando;
+    private string flagDrOuDs;
+    //####################################################Variaveis Encapsudas###########################################################
+    //################################################BEGIN METODO/PROCEDIMENTO DE BANCO DE DADOS################################################################################################
+    public void abreConexao()
+    {
+        conexao.Open();
+
+    }
+    public void fechaConexao()
+    {
+        conexao.Close();
+    }
+    public int statusSchema()
+    {
+        if (conexao.State == ConnectionState.Open)
+        {
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    public void fechaRead()
+    {
+        try
+        {
+            drResultado.Close();         //fechando o dataRead quando for chamado pelo "DR"
+        }
+        catch (Exception e)
+        {
+            throw new Exception("ERRO BANCO DE DADOS: " + e.Message.ToString());
+        }
+    }
+
+    public void procedimentoRead()
+    {
+        flagDrOuDs = "DR";
+        drResultado = comando.ExecuteReader();
+    }
+    public void procedimentoText()
+    {
+        comando.ExecuteNonQuery();
+    }
+    public void procedimentoSet()
+    {
+        flagDrOuDs = "DS";
+        MySqlDataAdapter data = new MySqlDataAdapter(comando);
+        dsResultado = new DataSet();
+        data.Fill(dsResultado);
+    }
+    public DataSet retornaSet()
+    {
+        return dsResultado;
+    }
+    public MySqlDataReader retornaRead()
+    {
+        return drResultado;
+    }
+    public void startTransaction(string procedimento)
+    {
+        comando = new MySqlCommand(procedimento, conexao);
+        comando.CommandType = System.Data.CommandType.StoredProcedure;
+    }
+    public void singleTransaction(string instrucao)
+    {
+        comando = new MySqlCommand(instrucao, conexao);
+        comando.CommandType = System.Data.CommandType.Text;
+    }
+    public void addParametro(string nome, string valor)
+    {
+        parametro = new MySqlParameter();
+        parametro.ParameterName = nome;
+        parametro.Value = valor;
+        comando.Parameters.Add(parametro);
+    }
+    //################################################END METODO/PROCEDIMENTO DE BANCO DE DADOS####################################################################################################
+}
